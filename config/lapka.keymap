@@ -1,85 +1,265 @@
+#include "keys_ru.h"
 #include <behaviors.dtsi>
-#include <dt-bindings/zmk/ext_power.h>
-#include <dt-bindings/zmk/outputs.h>
-#include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/bt.h>
+#include <dt-bindings/zmk/keys.h>
+#include <dt-bindings/zmk/outputs.h>
+#include <dt-bindings/zmk/pointing.h>
 
-#define DEF 0
-#define GAM 1
-#define GFN 2
-#define NAV 3
-#define SYM 4
-#define NUM 5
+#define EN     0
+#define RU     1
+#define SYM_EN 2
+#define SYM_RU 3
+#define NAV    4
+#define ADJ    5
+#define MOU    6
 
-&sk {
-    release-after-ms = <60000>;
+&mt {
+    quick-tap-ms = <200>;
+    flavor = "tap-preferred";
+    require-prior-idle-ms = <125>;
 };
 
 / {
-    conditional_layers {
-        compatible = "zmk,conditional-layers";
-        tri_layer {
-            if-layers  = <NAV SYM>;
-            then-layer = <NUM>;
+    behaviors {
+        hml: home_row_mod_left {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            require-prior-idle-ms = <150>;
+            tapping-term-ms = <280>;
+            quick-tap-ms = <175>;
+            bindings = <&kp>, <&kp>;
+            hold-trigger-key-positions = <5 6 7 8 9 15 16 17 18 19 25 26 27 28 29 33 34 35>;
+            hold-trigger-on-release;
+        };
+
+        hmr: home_row_mod_right {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            require-prior-idle-ms = <150>;
+            tapping-term-ms = <280>;
+            quick-tap-ms = <175>;
+            bindings = <&kp>, <&kp>;
+            hold-trigger-key-positions = <0 1 2 3 4 10 11 12 13 14 20 21 22 23 24 30 31 32>;
+            hold-trigger-on-release;
+        };
+
+        /* mod-morph: plain tap = SPACE, with GUI = switch to RU (from EN layer) */
+        en_space: en_space {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp SPACE>, <&layer_ru>;
+            mods = <(MOD_LGUI)>;
+        };
+
+        /* mod-morph: plain tap = SPACE, with GUI = switch to EN (from RU layer) */
+        ru_space: ru_space {
+            compatible = "zmk,behavior-mod-morph";
+            #binding-cells = <0>;
+            bindings = <&kp SPACE>, <&layer_en>;
+            mods = <(MOD_LGUI)>;
+        };
+
+        /* hold = MOU layer, tap = en_space (mod-morph) — used on EN layer */
+        mlt_en: mouse_layer_tap_en {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <200>;
+            quick-tap-ms = <150>;
+            bindings = <&mo>, <&en_space>;
+        };
+
+        /* hold = MOU layer, tap = ru_space (mod-morph) — used on RU layer */
+        mlt_ru: mouse_layer_tap_ru {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <200>;
+            quick-tap-ms = <150>;
+            bindings = <&mo>, <&ru_space>;
         };
     };
-};
 
-/ {
+    macros {
+        /* switch OS to EN (Ctrl+0) and keyboard to EN layer */
+        layer_en: layer_en {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            wait-ms = <0>;
+            tap-ms = <30>;
+            bindings = <&kp LC(N0) &to EN>;
+        };
+
+        /* switch OS to RU (Ctrl+1) and keyboard to RU layer */
+        layer_ru: layer_ru {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            wait-ms = <0>;
+            tap-ms = <30>;
+            bindings = <&kp LC(N1) &to RU>;
+        };
+
+        /* switch OS to EN (Ctrl+0) — for use inside &en macro, no layer change */
+        to_en: to_en {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            wait-ms = <0>;
+            tap-ms = <30>;
+            bindings = <&kp LC(N0)>;
+        };
+
+        /* switch OS to RU (Ctrl+1) — for use inside &en macro, no layer change */
+        to_ru: to_ru {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            wait-ms = <0>;
+            tap-ms = <30>;
+            bindings = <&kp LC(N1)>;
+        };
+
+        en: en {
+            compatible = "zmk,behavior-macro-one-param";
+            #binding-cells = <1>;
+            wait-ms = <0>;
+            tap-ms = <30>;
+            bindings =
+                <&to_en>,
+                <&macro_press>,
+                <&macro_param_1to1 &kp MACRO_PLACEHOLDER>,
+                <&macro_pause_for_release>,
+                <&macro_release>,
+                <&macro_param_1to1 &kp MACRO_PLACEHOLDER>,
+                <&macro_tap>,
+                <&to_ru>;
+        };
+    };
+
+    combos {
+        compatible = "zmk,combos";
+
+        kha {
+            bindings = <&kp RU_CYRILLIC_HA>;
+            key-positions = <6 7>;
+            layers = <RU>;
+        };
+
+        hrdsgn {
+            bindings = <&kp RU_CYRILLIC_HARD_SIGN>;
+            key-positions = <7 8>;
+            layers = <RU>;
+        };
+
+        combo_to_ru {
+            bindings = <&layer_ru>;
+            key-positions = <2 3>;
+            layers = <EN>;
+        };
+
+        combo_to_en {
+            bindings = <&layer_en>;
+            key-positions = <2 3>;
+            layers = <RU>;
+        };
+
+        /* X + C = точка */
+        dot_en {
+            bindings = <&kp DOT>;
+            key-positions = <21 22>;
+            layers = <EN>;
+        };
+
+        dot_ru {
+            bindings = <&kp RU_DOT>;
+            key-positions = <21 22>;
+            layers = <RU>;
+        };
+
+        /* C + V = запятая */
+        comma_en {
+            bindings = <&kp COMMA>;
+            key-positions = <22 23>;
+            layers = <EN>;
+        };
+
+        comma_ru {
+            bindings = <&kp RU_COMMA>;
+            key-positions = <22 23>;
+            layers = <RU>;
+        };
+    };
+
     keymap {
         compatible = "zmk,keymap";
 
-        def_layer {
+        en {
+            display-name = "Base";
             bindings = <
-&kp Q          &kp W          &kp E          &kp R         &kp T             &kp Y          &kp U          &kp I          &kp O          &kp P
-&kp A          &kp S          &kp D          &kp F         &kp G             &kp H          &kp J          &kp K          &kp L          &kp SEMI
-&kp Z          &kp X          &kp C          &kp V         &kp B             &kp N          &kp M          &kp COMMA      &kp DOT        &kp FSLH
-                          &kp CAPS       &kp SPACE     &mo NAV         &mo SYM      &kp LSFT       &kp RALT
+&kp Q        &kp W        &kp E         &kp R          &kp T              &kp Y       &kp U         &kp I         &kp O        &kp P
+&hml LGUI A  &hml LALT S  &hml LCTRL D  &hml LSHFT F   &kp G              &kp H       &hmr RSHFT J  &hmr RCTRL K  &hmr LALT L  &hmr RGUI SEMI
+&kp Z        &kp X        &kp C         &kp V          &kp B              &kp N       &kp M         &kp COMMA     &kp DOT      &kp SQT
+                           &kp TAB       &mo NAV        &mlt_en MOU 0      &kp RET     &mo SYM_EN    &kp BSPC
             >;
         };
 
-        gam_layer {
+        ru {
+            display-name = "Ru";
             bindings = <
-&kp TAB        &kp Q          &kp W          &kp E         &kp R             &none          &none          &kp UP         &none          &kp TAB
-&kp LSFT       &kp A          &kp S          &kp D         &kp F             &none          &kp LEFT       &kp DOWN       &kp RIGHT      &kp RSFT
-&kp LCTRL      &kp Z          &kp X          &kp C         &kp V             &none          &none          &none          &none          &kp RCTRL
-                          &kp LALT       &kp SPACE     &mo GFN         &tog GAM     &kp SPACE      &trans
+&kp RU_CYRILLIC_SHORT_I   &kp RU_CYRILLIC_TSE         &kp RU_CYRILLIC_U          &kp RU_CYRILLIC_KA        &kp RU_CYRILLIC_IE            &kp RU_CYRILLIC_EN  &kp RU_CYRILLIC_GHE        &kp RU_CYRILLIC_SHA        &kp RU_CYRILLIC_SHCHA     &kp RU_CYRILLIC_ZE
+&hml LGUI RU_CYRILLIC_EF  &hml LALT RU_CYRILLIC_YERU  &hml LCTRL RU_CYRILLIC_VE  &hml LSHFT RU_CYRILLIC_A  &kp RU_CYRILLIC_PE            &kp RU_CYRILLIC_ER  &hmr RSHFT RU_CYRILLIC_O   &hmr RCTRL RU_CYRILLIC_EL  &hmr LALT RU_CYRILLIC_DE  &hmr RGUI RU_CYRILLIC_ZHE
+&kp RU_CYRILLIC_YA        &kp RU_CYRILLIC_CHE         &kp RU_CYRILLIC_ES         &kp RU_CYRILLIC_EM        &kp RU_CYRILLIC_I             &kp RU_CYRILLIC_TE  &kp RU_CYRILLIC_SOFT_SIGN  &kp RU_CYRILLIC_BE         &kp RU_CYRILLIC_YU        &kp RU_CYRILLIC_E
+                                                        &kp TAB                    &mo NAV                   &mlt_ru MOU 0                 &kp RET             &mo SYM_RU                 &kp BSPC
             >;
         };
 
-        gfn_layer {
+        sym_en {
+            display-name = "Symbols";
             bindings = <
-&kp N5         &kp N1         &kp N2         &kp N3        &kp N4            &out OUT_TOG &bt BT_SEL 0 &bt BT_SEL 1   &bt BT_SEL 2 &bt BT_CLR_ALL
-&kp N0         &kp N6         &kp N7         &kp N8        &kp N9            &none          &none          &none            &none          &none
-&kp G          &kp J          &kp I          &kp M         &kp T             &kp KP_NUM     &none          &none            &sys_reset   &bootloader
-                          &kp ESC        &kp RET       &trans          &trans       &trans       &none
+&kp EXCL        &kp LT          &kp MINUS         &kp GT           &kp GRAVE          &kp CARET   &kp LBKT         &kp UNDER        &kp RBKT        &kp DLLR
+&hml LGUI BSLH  &hml LALT LPAR  &hml LCTRL EQUAL  &hml LSHFT RPAR  &kp PLUS           &kp PRCNT   &hmr RSHFT LBRC  &hmr RCTRL SEMI  &hmr LALT RBRC  &hmr RGUI EXCL
+&kp HASH        &kp STAR        &kp COLON         &kp FSLH         &kp AMPS           &kp AT      &kp PIPE         &kp TILDE        &kp QMARK       &kp SQT
+                                  &trans            &mo ADJ          &trans             &trans      &none            &trans
             >;
         };
 
-        nav_layer {
+        sym_ru {
+            display-name = "Symbols Ru";
             bindings = <
-&sk LC(TAB)  &sk LA(TAB)  &sk LG(TAB)  &none         &kp ESC           &kp ESC        &kp HOME       &kp END        &kp BSPC       &kp DEL
-&sk LGUI     &sk LALT     &sk LCTRL    &sk LSHFT     &kp RET           &kp RET        &kp LEFT       &kp DOWN       &kp UP         &kp RIGHT
-&kp LC(LG(LEFT))       &kp LC(LG(RIGHT))       &tog GAM     &kp PSCRN     &kp TAB           &kp TAB        &kp PG_UP      &kp PG_DN      &kp APOS       &kp KP_NUM
-                          &trans      &trans      &trans          &trans       &trans       &trans
+&kp EXCL                &en LT          &kp MINUS         &en GT           &en GRAVE          &en CARET   &en LBKT         &kp UNDER           &en RBKT        &en DLLR
+&hml LGUI RU_BACKSLASH  &hml LALT LPAR  &hml LCTRL EQUAL  &hml LSHFT RPAR  &kp PLUS           &kp PRCNT   &en LBRC         &hmr RCTRL RU_SEMI  &en RBRC        &hmr RGUI EXCL
+&en HASH                &kp STAR        &kp RU_COLON      &kp RU_FSLH      &en AMPS           &en AT      &en PIPE         &en TILDE           &kp RU_QMARK    &kp RU_CYRILLIC_E
+                                          &trans            &mo ADJ          &trans             &trans      &none            &trans
             >;
         };
 
-        sym_layer {
+        nav {
+            display-name = "Nav";
             bindings = <
-&kp N1         &kp N2         &kp N3         &kp N4        &kp N5            &kp N6         &kp N7         &kp N8         &kp N9         &kp N0
-&kp SEMI       &kp RA(GRAVE)        &kp GRAVE        &kp LS(GRAVE)       &kp MINUS         &kp PLUS       &sk RSHFT    &sk RCTRL    &sk LALT     &sk RGUI
-&kp RA(BSLH)        &none          &kp LS(LBKT)   &kp LBKT      &kp UNDER         &kp EQUAL      &kp RBKT       &kp LS(RBKT)   &kp LS(BSLH)        &kp BSLH
-                          &trans       &trans      &trans          &trans       &trans       &kp RALT
+&kp N1         &kp N2    &kp N3     &kp N4     &kp N5             &kp N6          &kp N7           &kp N8           &kp N9        &kp N0
+&hml LGUI ESC  &kp LALT  &kp LCTRL  &kp LSHFT  &kp ENTER          &kp LG(LS(S))   &hmr RSHFT LEFT  &hmr RCTRL DOWN  &hmr LALT UP  &hmr RGUI RIGHT
+&layer_en    &kp HOME  &kp INS    &kp END    &kp DEL            &kp CAPS        &none            &kp PG_DN        &kp PG_UP     &layer_ru
+                          &trans     &none      &trans             &trans          &mo ADJ          &trans
             >;
         };
 
-        num_layer {
+        adj {
+            display-name = "Adjust";
             bindings = <
-&kp KP_N1      &kp KP_N2      &kp KP_N3      &kp KP_N4     &kp KP_N5         &kp KP_N6      &kp KP_N7      &kp KP_N8      &kp KP_N9      &kp KP_N0
-&sk LGUI     &sk LALT     &sk LCTRL    &sk LSHFT   &kp F11           &kp F12        &sk RSHFT    &sk RCTRL    &sk LALT     &sk RGUI
-&kp F1         &kp F2         &kp F3         &kp F4        &kp F5            &kp F6         &kp F7         &kp F8         &kp F9         &kp F10
-                          &trans       &trans      &trans          &trans       &trans       &trans
+&bootloader  &kp F1        &kp F2         &kp F3         &kp F4             &bt BT_SEL 0  &bt BT_SEL 1         &bt BT_SEL 2       &bt BT_SEL 3        &bt BT_CLR
+&kp LGUI     &hml LALT F5  &hml LCTRL F6  &hml LSHFT F7  &kp F8             &out OUT_BLE  &hmr RSHFT C_VOL_DN  &hmr RCTRL C_MUTE  &hmr LALT C_VOL_UP  &kp RGUI
+&none        &kp F9        &kp F10        &kp F11        &kp F12            &out OUT_USB  &kp C_PREV           &kp C_PP           &kp C_NEXT          &none
+                            &trans         &trans         &trans             &trans        &trans               &trans
+            >;
+        };
+
+        mouse {
+            display-name = "Mouse";
+            bindings = <
+&none       &none       &none        &none        &none              &none       &none        &none        &none       &none
+&kp LGUI    &kp KP_NUM  &mkp RCLK    &mkp LCLK    &mkp MCLK          &mkp MCLK   &mkp LCLK    &mkp RCLK    &none       &none
+&none       &none       &none        &none        &none              &none       &none        &none        &none       &none
+                         &trans       &trans       &trans             &trans      &trans       &trans
             >;
         };
     };

@@ -5,6 +5,7 @@ type: shield
 url: https://github.com/braindefender/lapka
 features:
   - keys
+  - pointing
 requires:
   - pro_micro
 siblings:
