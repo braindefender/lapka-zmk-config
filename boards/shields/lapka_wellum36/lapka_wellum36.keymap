@@ -241,8 +241,8 @@ ___         _ LCTRL     _ Z         _ X         _ C         _ V         ___     
 
         gfn_layer {
             bindings = <
-___         _ N5        _ N1        _ N2        _ N3        _ N4        BT_Toggle    BT_1       BT_2        BT_3        BT_Clear       ___
-___         _ N0        _ N6        _ N7        _ N8        _ N9        ___          ___        ___         ___         ___            ___
+___         _ N5        _ N1        _ N2        _ N3        _ N4        ___          ___        ___         ___         ___            ___
+___         _ N0        _ N6        _ N7        _ N8        _ N9        BT_Toggle    BT_1       BT_2        BT_3        BT_Clear       ___
 ___         _ G         _ J         _ I         _ M         _ T         _ KP_NUM     ___        ___         &sys_reset  &bootloader    ___
                                     _ ESC       _ RET       ______      ______       ______     ___
             >;
